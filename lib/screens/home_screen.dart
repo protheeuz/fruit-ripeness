@@ -1,8 +1,13 @@
+import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:lottie/lottie.dart';
+import '../services/api_service.dart';
+import 'prediction_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -13,6 +18,7 @@ class _HomeScreenState extends State<HomeScreen>
   CameraController? _cameraController;
   List<CameraDescription>? cameras;
   late AnimationController _animationController;
+  bool _isLoading = false; // Flag untuk loading animasi
 
   @override
   void initState() {
@@ -44,11 +50,85 @@ class _HomeScreenState extends State<HomeScreen>
     super.dispose();
   }
 
+  void _navigateToPredictionScreen(
+      File imageFile, Map<String, dynamic> predictionResult) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PredictionScreen(
+          imageFile: imageFile,
+          predictionResult: predictionResult,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _predictFromGallery() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      final file = File(pickedFile.path);
+      setState(() {
+        _isLoading = true;
+      });
+      try {
+        final prediction = await ApiService.sendImageToModel(file);
+        setState(() {
+          _isLoading = false;
+        });
+        _navigateToPredictionScreen(file, prediction);
+      } catch (e) {
+        setState(() {
+          _isLoading = false;
+        });
+        _showErrorDialog(e.toString());
+      }
+    }
+  }
+
+  Future<void> _predictFromCamera() async {
+    if (_cameraController != null && _cameraController!.value.isInitialized) {
+      setState(() {
+        _isLoading = true;
+      });
+      try {
+        final file = await _cameraController!.takePicture();
+        final prediction = await ApiService.sendImageToModel(File(file.path));
+        setState(() {
+          _isLoading = false;
+        });
+        _navigateToPredictionScreen(File(file.path), prediction);
+      } catch (e) {
+        setState(() {
+          _isLoading = false;
+        });
+        _showErrorDialog(e.toString());
+      }
+    }
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Error'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final frameWidth = screenWidth * 0.98; // Lebar frame kamera
-    final frameHeight = frameWidth * 1.45; // Tinggi frame kamera (4:3)
+    final frameWidth = screenWidth * 0.95; // Lebar frame kamera
+    final frameHeight = frameWidth * 1.60; // Tinggi frame kamera (4:3)
     const framePadding = 30.0; // Padding antara frame dan kamera
 
     return Scaffold(
@@ -159,9 +239,7 @@ class _HomeScreenState extends State<HomeScreen>
                         width: 30,
                         height: 30,
                       ),
-                      onPressed: () {
-                        // Open gallery picker logic
-                      },
+                      onPressed: _predictFromGallery,
                     ),
                     // Switch Camera Button
                     IconButton(
@@ -192,7 +270,7 @@ class _HomeScreenState extends State<HomeScreen>
           ),
           // Floating QR Scanner Button (di atas semua layout)
           Positioned(
-            top: 620,
+            top: 628,
             left: MediaQuery.of(context).size.width / 2 - 35,
             child: Stack(
               alignment: Alignment.center,
@@ -218,14 +296,21 @@ class _HomeScreenState extends State<HomeScreen>
                       width: 25,
                       height: 25,
                     ),
-                    onPressed: () {
-                      // Scan to detect
-                    },
+                    onPressed: _predictFromCamera,
                   ),
                 ),
               ],
             ),
           ),
+          // Animasi loading
+          if (_isLoading)
+            Center(
+              child: Lottie.asset(
+                'assets/animations/loading-animation.json',
+                width: 150,
+                height: 150,
+              ),
+            ),
         ],
       ),
     );

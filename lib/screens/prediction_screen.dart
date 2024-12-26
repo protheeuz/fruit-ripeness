@@ -13,6 +13,14 @@ class PredictionScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Format hasil prediksi
+    final prediction = predictionResult['prediction'] ?? 'Unknown';
+    final confidence = predictionResult['confidence'] != null
+        ? '${(predictionResult['confidence'] * 100).toStringAsFixed(2)}%'
+        : 'Unknown';
+    final durationTime = predictionResult['duration_time'] ?? 'Unknown';
+    final message = predictionResult['message'] ?? 'No message available';
+
     return Scaffold(
       backgroundColor: Colors.greenAccent,
       appBar: AppBar(
@@ -78,14 +86,45 @@ class PredictionScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Colors.black, width: 1.5),
               ),
-              child: Text(
-                predictionResult.toString(),
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Poppins',
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Prediction Result: $prediction',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Poppins',
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Confidence: $confidence',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Poppins',
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Duration Time: $durationTime',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Poppins',
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Message: $message',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Poppins',
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
