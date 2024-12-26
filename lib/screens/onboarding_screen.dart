@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
+import 'package:permission_handler/permission_handler.dart';
+import '../utils/permission_helper.dart';
 
 class OnBoardingScreen extends StatefulWidget {
   const OnBoardingScreen({super.key});
@@ -24,8 +26,32 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
     super.dispose();
   }
 
-  void _onDone() {
-    Navigator.pushReplacementNamed(context, '/home');
+  /// Fungsi untuk menangani logika setelah onboarding selesai
+  Future<void> _onDone() async {
+    final cameraStatus = await Permission.camera.request();
+    final storageStatus = await Permission.storage.request();
+
+    debugPrint('Camera permission status: $cameraStatus');
+    debugPrint('Storage permission status: $storageStatus');
+
+    if (cameraStatus.isGranted && storageStatus.isGranted) {
+      Navigator.pushReplacementNamed(context, '/home');
+    } else if (cameraStatus.isPermanentlyDenied ||
+        storageStatus.isPermanentlyDenied) {
+      openAppSettings();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Permissions are required to proceed.')),
+      );
+    }
+  }
+
+  /// Fungsi untuk langsung ke halaman terakhir saat tombol "Skip" ditekan
+  void _skipToLastPage() {
+    setState(() {
+      _pageIndex = demoData.length - 1;
+    });
+    _pageController.jumpToPage(demoData.length - 1);
   }
 
   @override
@@ -38,13 +64,15 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
             children: [
               Align(
                 alignment: Alignment.topRight,
-                child: TextButton(
-                  onPressed: _onDone,
-                  child: const Text(
-                    'Skip',
-                    style: TextStyle(color: Colors.greenAccent),
-                  ),
-                ),
+                child: _pageIndex != demoData.length - 1
+                    ? TextButton(
+                        onPressed: _skipToLastPage,
+                        child: const Text(
+                          'Skip',
+                          style: TextStyle(color: Colors.greenAccent),
+                        ),
+                      )
+                    : const SizedBox(),
               ),
               Expanded(
                 child: PageView.builder(
@@ -60,6 +88,7 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
                     title: demoData[index].title,
                     description: demoData[index].description,
                     isLast: index == demoData.length - 1,
+                    onGetStarted: _onDone,
                   ),
                 ),
               ),
@@ -75,37 +104,34 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
                     ),
                   ),
                   const Spacer(),
-                  SizedBox(
-                    height: 55,
-                    width: 55,
-                    child: InkWell(
-                      onTap: () {
-                        if (_pageIndex == demoData.length - 1) {
-                          _onDone();
-                        } else {
+                  if (_pageIndex != demoData.length - 1)
+                    SizedBox(
+                      height: 55,
+                      width: 55,
+                      child: InkWell(
+                        onTap: () {
                           _pageController.nextPage(
                             duration: const Duration(milliseconds: 300),
                             curve: Curves.ease,
                           );
-                        }
-                      },
-                      borderRadius: BorderRadius.circular(12),
-                      child: Container(
-                        height: 55,
-                        width: 55,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          gradient: const LinearGradient(
-                            colors: [Colors.green, Colors.lightGreen],
+                        },
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          height: 55,
+                          width: 55,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            gradient: const LinearGradient(
+                              colors: [Colors.green, Colors.lightGreen],
+                            ),
                           ),
-                        ),
-                        child: const Icon(
-                          Icons.arrow_forward,
-                          color: Colors.white,
+                          child: const Icon(
+                            Icons.arrow_forward,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
-                  ),
                 ],
               ),
             ],
@@ -131,9 +157,8 @@ class DotIndicator extends StatelessWidget {
       height: isActive ? 12 : 4,
       width: 4,
       decoration: BoxDecoration(
-        color: isActive
-            ? Colors.greenAccent
-            : Colors.greenAccent.withOpacity(0.4),
+        color:
+            isActive ? Colors.greenAccent : Colors.greenAccent.withOpacity(0.4),
         borderRadius: const BorderRadius.all(
           Radius.circular(12),
         ),
@@ -158,8 +183,7 @@ final List<OnBoard> demoData = [
   OnBoard(
     animation: "assets/animations/animation1.json",
     title: "Hi, check your fruit ripeness\nusing our app",
-    description:
-        "Upload a picture and let our AI analyze your fruit ripeness!",
+    description: "Upload a picture and let our AI analyze your fruit ripeness!",
   ),
   OnBoard(
     animation: "assets/animations/animation2.json",
@@ -188,10 +212,12 @@ class OnBoardContent extends StatelessWidget {
     required this.title,
     required this.description,
     this.isLast = false,
+    this.onGetStarted,
   });
 
   final String animation, title, description;
   final bool isLast;
+  final VoidCallback? onGetStarted;
 
   @override
   Widget build(BuildContext context) {
@@ -206,7 +232,7 @@ class OnBoardContent extends StatelessWidget {
           ),
         if (isLast)
           Image.asset(
-            'assets/images/fruit_basket.png',
+            'assets/images/image1.png',
             height: 280,
             width: 200,
           ),
@@ -232,13 +258,10 @@ class OnBoardContent extends StatelessWidget {
         const SizedBox(height: 25),
         if (isLast)
           ElevatedButton(
-            onPressed: () {
-              Navigator.pushReplacementNamed(context, '/home');
-            },
+            onPressed: onGetStarted,
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.green,
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 40, vertical: 15),
+              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
