@@ -13,14 +13,6 @@ class PredictionScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Format hasil prediksi
-    final prediction = predictionResult['prediction'] ?? 'Unknown';
-    final confidence = predictionResult['confidence'] != null
-        ? '${(predictionResult['confidence'] * 100).toStringAsFixed(2)}%'
-        : 'Unknown';
-    final durationTime = predictionResult['duration_time'] ?? 'Unknown';
-    final message = predictionResult['message'] ?? 'No message available';
-
     return Scaffold(
       backgroundColor: Colors.greenAccent,
       appBar: AppBar(
@@ -90,36 +82,36 @@ class PredictionScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Prediction Result: $prediction',
+                    'Prediction Result: ${predictionResult['Prediction Result'] ?? 'Unknown'}',
                     style: const TextStyle(
-                      fontSize: 16,
+                      fontSize: 14,
                       fontWeight: FontWeight.bold,
                       fontFamily: 'Poppins',
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Confidence: $confidence',
+                    'Confidence: ${predictionResult['Confidence'] ?? 'Unknown'}%',
                     style: const TextStyle(
-                      fontSize: 16,
+                      fontSize: 14,
                       fontWeight: FontWeight.bold,
                       fontFamily: 'Poppins',
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Duration Time: $durationTime',
+                    'Duration Time: ${predictionResult['Duration Time'] ?? 'Unknown'}',
                     style: const TextStyle(
-                      fontSize: 16,
+                      fontSize: 14,
                       fontWeight: FontWeight.bold,
                       fontFamily: 'Poppins',
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Message: $message',
+                    'Message: ${predictionResult['Message'] ?? 'Unknown'}',
                     style: const TextStyle(
-                      fontSize: 16,
+                      fontSize: 14,
                       fontWeight: FontWeight.bold,
                       fontFamily: 'Poppins',
                     ),

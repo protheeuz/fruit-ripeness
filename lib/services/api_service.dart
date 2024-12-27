@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  static const String _baseUrl = 'https://b2f2-182-253-55-227.ngrok-free.app/predict';
+  static const String _baseUrl = '';
 
   static Future<Map<String, dynamic>> sendImageToModel(File imageFile) async {
     final url = Uri.parse(_baseUrl);
@@ -15,7 +15,6 @@ class ApiService {
 
     try {
       final response = await request.send();
-
       if (response.statusCode == 200) {
         final responseData = await http.Response.fromStream(response);
         return json.decode(responseData.body);

@@ -74,6 +74,7 @@ class _HomeScreenState extends State<HomeScreen>
       });
       try {
         final prediction = await ApiService.sendImageToModel(file);
+        print('Prediction from Gallery: $prediction');
         setState(() {
           _isLoading = false;
         });
@@ -95,6 +96,7 @@ class _HomeScreenState extends State<HomeScreen>
       try {
         final file = await _cameraController!.takePicture();
         final prediction = await ApiService.sendImageToModel(File(file.path));
+        print('Prediction from Camera: $prediction');
         setState(() {
           _isLoading = false;
         });
@@ -302,14 +304,33 @@ class _HomeScreenState extends State<HomeScreen>
               ],
             ),
           ),
-          // Animasi loading
+          // Animasi loading dengan overlay blur
           if (_isLoading)
-            Center(
-              child: Lottie.asset(
-                'assets/animations/loading-animation.json',
-                width: 150,
-                height: 150,
-              ),
+            Stack(
+              children: [
+                // Blur background
+                Positioned.fill(
+                  child: Container(
+                    color: Colors.black.withOpacity(0.5),
+                  ),
+                ),
+                // Loading animation
+                Center(
+                  child: Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Lottie.asset(
+                      'assets/animations/loading-animation.json',
+                      width: 150,
+                      height: 150,
+                    ),
+                  ),
+                ),
+              ],
             ),
         ],
       ),
